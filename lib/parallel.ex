@@ -5,11 +5,15 @@ defmodule Parallel do
     |> Enum.map(&Task.await/1)
   end
 
-  def pmap_2(collection, func) do
-    pmap_2_sub(Enum.to_list(collection), [], func, 0, 2000)
+  def pmap_2(collection, func) when is_list(collection) do
+    pmap_2_sub(collection, [], func, 0, 2000)
     |> Enum.map(&Task.await/1)
     |> List.flatten()
     |> Enum.reverse()
+  end
+
+  def pmap_2(collection, func) do
+  	collection |> Enum.to_list() |> pmap_2(func)
   end
 
   defp pmap_2_sub([], rest, func, _, _) do
@@ -18,7 +22,7 @@ defmodule Parallel do
 
   defp pmap_2_sub(rest, heads, func, threshold, threshold) do
     [
-      Task.async(fn -> heads |> Enum.map(func) end)
+      Task.async(fn -> Enum.map(heads, func) end)
       | pmap_2_sub(rest, [], func, 0, threshold) |> Enum.reverse()
     ]
     |> Enum.reverse()
@@ -28,12 +32,16 @@ defmodule Parallel do
     pmap_2_sub(tail, [head | heads], func, count + 1, threshold)
   end
 
-  def pmap_3(collection, func) do
-    pmap_3_sub(Enum.to_list(collection), [], func, 0, 0, 20)
+  def pmap_3(collection, func) when is_list(collection) do
+    pmap_3_sub(collection, [], func, 0, 0, 20)
     |> receive_result([])
     |> Enum.map(fn {_, fragment} -> fragment end)
     |> List.flatten()
     |> Enum.reverse()
+  end
+
+  def pmap_3(collection, func) do
+  	collection |> Enum.to_list() |> pmap_3(func)
   end
 
   def receive_result([], result_list), do: result_list
