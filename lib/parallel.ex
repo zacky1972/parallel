@@ -1,5 +1,5 @@
 defmodule Parallel do
-  @threshold 4_000
+  @threshold 1_000
 
   def init do
     1..:erlang.system_info(:logical_processors_available)
@@ -102,12 +102,12 @@ defmodule Parallel do
   end
 
   def pmap_4_sub([], rest, func, id, _, _) do
-    Parallel.Pool.get_process() |> call(self(), id, rest, func)
+    Parallel.Pool.get_process() |> call(self(), id, rest, &(Enum.map(&1, func)))
     [id]
   end
 
   def pmap_4_sub(rest, heads, func, id, threshold, threshold) do
-    Parallel.Pool.get_process() |> call(self(), id, heads, func)
+    Parallel.Pool.get_process() |> call(self(), id, heads, &(Enum.map(&1, func)))
     [
       id
       | pmap_4_sub(rest, [], func, id + 1, 0, threshold) |> Enum.reverse()
@@ -122,5 +122,35 @@ defmodule Parallel do
   def call(wpid, rpid, id, fragment, func) do
     send(wpid, {:work, rpid, id, fragment, func})
     wpid
+  end
+
+  def pmap_5(collection, func) when is_list(collection) do
+    pmap_5_sub(collection, [], func, 0, 0, @threshold)
+    |> receive_result([])
+    |> Enum.map(fn {_, fragment} -> fragment end)
+    |> List.flatten()
+    |> Enum.reverse()
+  end
+
+  def pmap_5(collection, func) do
+    collection |> Enum.to_list() |> pmap_5(func)
+  end
+
+  def pmap_5_sub([], rest, func, id, _, _) do
+    Parallel.Pool.get_process() |> call(self(), id, rest, func)
+    [id]
+  end
+
+  def pmap_5_sub(rest, heads, func, id, threshold, threshold) do
+    Parallel.Pool.get_process() |> call(self(), id, heads, func)
+    [
+      id
+      | pmap_5_sub(rest, [], func, id + 1, 0, threshold) |> Enum.reverse()
+    ]
+    |> Enum.reverse()
+  end
+
+  def pmap_5_sub([head | tail], heads, func, id, count, threshold) do
+    pmap_5_sub(tail, [head | heads], func, id, count + 1, threshold)
   end
 end

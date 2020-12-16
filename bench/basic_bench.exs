@@ -35,6 +35,11 @@ defmodule BasicBench do
     |> Parallel.pmap_4(& LogisticMap.logistic_map_10(&1))
   end
 
+  bench "Pmap5" do
+    @range_0x10000
+    |> Parallel.pmap_5(& LogisticMap.logistic_map_10_pelemay(&1))
+  end
+
   bench "Flow" do
     @range_0x10000
     |> Flow.from_enumerable()
