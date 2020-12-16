@@ -50,4 +50,11 @@ defmodule BasicBench do
     @range_0x10000
     |> Parallel.pmap_4(& logistic_map_10(&1))
   end
+
+  bench "Flow" do
+    @range_0x10000
+    |> Flow.from_enumerable()
+    |> Flow.map(& logistic_map_10(&1))
+    |> Enum.sort()
+  end    
 end

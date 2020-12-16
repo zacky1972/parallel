@@ -22,7 +22,8 @@ defmodule Parallel.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:benchfella, "~> 0.3.5"}
+      {:benchfella, "~> 0.3.5"},
+      {:flow, "~> 1.0.0"}
     ]
   end
 end
