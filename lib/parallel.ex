@@ -1,5 +1,5 @@
 defmodule Parallel do
-  @threshold 2000
+  @threshold 4_000
 
   def init do
     1..:erlang.system_info(:logical_processors_available)
