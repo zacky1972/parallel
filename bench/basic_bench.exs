@@ -26,4 +26,9 @@ defmodule BasicBench do
     @range_0x10000
     |> Parallel.pmap_3(&(&1 * &1))
   end
+
+  bench "Pmap4" do
+    @range_0x10000
+    |> Parallel.pmap_4(&(&1 * &1))
+  end
 end

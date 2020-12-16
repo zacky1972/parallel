@@ -11,7 +11,8 @@ defmodule Parallel.Application do
       [
         # Starts a worker by calling: Parallel.Worker.start_link(arg)
         # {Parallel.Worker, arg}
-        {Parallel.BlockingQueue, name: :task_queue}
+        {Parallel.BlockingQueue, name: :task_queue},
+        Parallel.Pool
       ] ++
         (1..:erlang.system_info(:logical_processors_available)
          |> Enum.map(fn id -> Supervisor.child_spec(Parallel.Worker, id: :"worker_#{id}") end))
