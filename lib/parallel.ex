@@ -1,4 +1,6 @@
 defmodule Parallel do
+  @threshold 2000
+
   def init do
     1..:erlang.system_info(:logical_processors_available)
     |> Enum.each(fn _ ->  Parallel.Pool.get_process() end)
@@ -11,7 +13,7 @@ defmodule Parallel do
   end
 
   def pmap_2(collection, func) when is_list(collection) do
-    pmap_2_sub(collection, [], func, 0, 2000)
+    pmap_2_sub(collection, [], func, 0, @threshold)
     |> Enum.map(&Task.await/1)
     |> List.flatten()
     |> Enum.reverse()
@@ -38,7 +40,7 @@ defmodule Parallel do
   end
 
   def pmap_3(collection, func) when is_list(collection) do
-    pmap_3_sub(collection, [], func, 0, 0, 2000)
+    pmap_3_sub(collection, [], func, 0, 0, @threshold)
     |> receive_result([])
     |> Enum.map(fn {_, fragment} -> fragment end)
     |> List.flatten()
@@ -88,7 +90,7 @@ defmodule Parallel do
   end
 
   def pmap_4(collection, func) when is_list(collection) do
-    pmap_4_sub(collection, [], func, 0, 0, 2000)
+    pmap_4_sub(collection, [], func, 0, 0, @threshold)
     |> receive_result([])
     |> Enum.map(fn {_, fragment} -> fragment end)
     |> List.flatten()
