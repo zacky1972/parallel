@@ -6,9 +6,6 @@ defmodule Parallel.Worker_2 do
         send(pid, {id, Enum.map(fragment, &func.(&1))})
         Parallel.Pool.alive(self())
         worker(wid)
-    after
-      1_000_000 ->
-        :ok
     end
   end  
 end

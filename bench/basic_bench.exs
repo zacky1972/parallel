@@ -5,6 +5,8 @@ defmodule BasicBench do
 
   setup_all do
     Parallel.Application.start(nil, nil)
+    Parallel.init()
+    {:ok, nil}
   end
 
   bench "Enum" do
