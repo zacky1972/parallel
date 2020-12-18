@@ -161,22 +161,11 @@ defmodule Parallel do
         func,
         opts \\ [chunk_mode: false, spawn_mode: :spawn, result_mode: :sort]
       ) do
-    #pmap_chunk_every_to_spawn_func(collection, @threshold, func, nil, opts)
-    pmap_chunk_every_to_spawn_func_sub(
-      collection,
-      [],
-      & Enum.map(&1, func),
-      fn pid, id, heads, func -> 
-      	Parallel.Pool.get_process() |> call(pid, id, heads, func)
-      end,
-      0,
-      0,
-      @threshold
-    )
-    #|> receive_result_with_opt(opts)
-    |> receive_result_sort([])
+    pmap_chunk_every_to_spawn_func(collection, @threshold, func, nil, opts)
+    |> receive_result_with_opt(opts)
     |> Enum.map(fn {fragment, _} -> fragment end)
     |> List.flatten()
+    |> Enum.reverse()
   end
 
   def pmap_chunk_every_to_spawn_func(collection, count, func, spawn_func, opts) do
@@ -224,24 +213,26 @@ defmodule Parallel do
   	[id]
   end
 
-
   def pmap_chunk_every_to_spawn_func_sub(rest, heads, func, spawn_func, id, threshold, threshold) do
     spawn_func.(self(), id, heads, func)
 
-    [id]
-    ++ pmap_chunk_every_to_spawn_func_sub(
-      rest, 
-      [], 
-      func, 
-      spawn_func,
-      id + 1, 
-      0, 
-      threshold
-    )
+    [
+      id
+      | pmap_chunk_every_to_spawn_func_sub(
+        rest, 
+        [], 
+        func, 
+        spawn_func,
+        id + 1, 
+        0, 
+        threshold
+      ) |> Enum.reverse()
+    ]
+    |> Enum.reverse()
   end
 
   def pmap_chunk_every_to_spawn_func_sub([head | tail], heads, func, spawn_func, id, count, threshold) do
-    pmap_chunk_every_to_spawn_func_sub(tail, heads ++ [head], func, spawn_func, id, count + 1, threshold)
+    pmap_chunk_every_to_spawn_func_sub(tail, [head | heads], func, spawn_func, id, count + 1, threshold)
   end
 
   def receive_result_with_opt(id_list, opts) do
@@ -260,7 +251,7 @@ defmodule Parallel do
         receive_result_sort(
           List.delete(id_list, id),
           (result_list ++ [{fragment, id}])
-          |> Enum.sort(fn {_f1, id1}, {_f2, id2} -> id1 < id2 end)
+          |> Enum.sort(fn {_f1, id1}, {_f2, id2} -> id1 >= id2 end)
         )
     after
       500 -> raise "Timeout when Process.receive_result/2"
