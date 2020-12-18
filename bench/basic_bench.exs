@@ -40,6 +40,21 @@ defmodule BasicBench do
     |> Parallel.pmap_5(& LogisticMap.logistic_map_10_pelemay(&1))
   end
 
+  bench "Pmap_f" do
+    @range_0x10000
+    |> Parallel.pmap_f(& LogisticMap.logistic_map_10(&1))
+  end
+
+  bench "Enum.chunk_every/2" do
+    @range_0x10000
+    |> Enum.chunk_every(2000)
+  end
+
+  bench "Enum.with_index/2" do
+    @range_0x10000
+    |> Enum.with_index()
+  end
+
   bench "Flow" do
     @range_0x10000
     |> Flow.from_enumerable()

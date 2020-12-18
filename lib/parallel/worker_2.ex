@@ -1,5 +1,4 @@
 defmodule Parallel.Worker_2 do
-
   def worker(wid) do
     receive do
       {:work, pid, id, fragment, func} ->
@@ -7,5 +6,5 @@ defmodule Parallel.Worker_2 do
         Parallel.Pool.alive(self())
         worker(wid)
     end
-  end  
+  end
 end
