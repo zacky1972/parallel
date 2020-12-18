@@ -159,7 +159,7 @@ defmodule Parallel do
   def pmap_f(
         collection,
         func,
-        opts \\ [chunk_mode: false, spawn_mode: :spawn, result_mode: :sort]
+        opts \\ [chunk_mode: false, spawn_mode: :spawn, result_mode: :enum]
       ) do
     pmap_chunk_every_to_spawn_func(collection, @threshold, func, nil, opts)
     |> receive_result_with_opt(opts)
@@ -236,19 +236,19 @@ defmodule Parallel do
   end
 
   def receive_result_with_opt(id_list, opts) do
-  	case Keyword.get(opts, :result_mode, :sort) do
-  	  :sort -> receive_result_sort(id_list, [])
+  	case Keyword.get(opts, :result_mode, :enum) do
+  	  :enum -> receive_result_enum(id_list, [])
   	end
   end 
 
-  def receive_result_sort([], result_list) do
+  def receive_result_enum([], result_list) do
     result_list
   end
 
-  def receive_result_sort(id_list, result_list) do
+  def receive_result_enum(id_list, result_list) do
     receive do
       {id, fragment} ->
-        receive_result_sort(
+        receive_result_enum(
           List.delete(id_list, id),
           (result_list ++ [{fragment, id}])
           |> Enum.sort(fn {_f1, id1}, {_f2, id2} -> id1 >= id2 end)
