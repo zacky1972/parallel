@@ -70,6 +70,16 @@ defmodule BasicBench do
     |> Parallel.pmap_f(& LogisticMap.logistic_map_10_pelemay(&1), spawn_mode: :spawn, chunk_mode: true, receive_mode: :merge_2)
   end
 
+  bench "Pmap_fb" do
+    @range_0x10000
+    |> Parallel.pmap_f(& LogisticMap.logistic_map_10(&1), spawn_mode: :spawn, chunk_mode: false, receive_mode: :bin)
+  end
+
+  bench "Pmap_fpb" do
+    @range_0x10000
+    |> Parallel.pmap_f(& LogisticMap.logistic_map_10_pelemay(&1), spawn_mode: :spawn, chunk_mode: true, receive_mode: :bin)
+  end
+
   # bench "Enum.chunk_every/2" do
   #   @range_0x10000
   #   |> Enum.chunk_every(2000)

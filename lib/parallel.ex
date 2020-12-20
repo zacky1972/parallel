@@ -289,6 +289,7 @@ defmodule Parallel do
   	  :enum -> receive_result_enum(id_list, [])
   	  :merge -> receive_result_merge(id_list, [])
       :merge_2 -> receive_result_merge_2(id_list, []) |> Enum.reverse()
+      :bin -> receive_result_bin(id_list, nil) |> binary_to_list()
   	end
   end 
 
@@ -363,5 +364,38 @@ defmodule Parallel do
     else
       [{fragment, id} | [{f_r, id_r} | rest ]]      
     end
+  end
+
+  def receive_result_bin([], result_bin) do
+    result_bin
+  end
+
+  def receive_result_bin(id_list, result_bin) do
+    receive do
+      {id, fragment} ->
+        receive_result_bin(
+          List.delete(id_list, id),
+          bin_merge(result_bin, {id, fragment})
+        )
+    after
+      500 -> raise "Timeout when Process.receive_result/2"
+    end
+  end
+
+  def bin_merge(nil, {id, fragment}) do
+    {id, fragment, nil, nil}
+  end
+
+  def bin_merge({id_r, fragment_r, left, right}, {id, fragment}) do
+    cond do
+      id_r < id -> {id_r, fragment_r, bin_merge(left, {id, fragment}), right}
+      true -> {id_r, fragment_r, left, bin_merge(right, {id, fragment})}
+    end
+  end
+
+  def binary_to_list(nil), do: []
+  
+  def binary_to_list({_id, fragment, left, right}) do
+    binary_to_list(left) ++ fragment ++ binary_to_list(right)
   end
 end
