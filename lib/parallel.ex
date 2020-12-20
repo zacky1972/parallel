@@ -288,6 +288,7 @@ defmodule Parallel do
   	case Keyword.get(opts, :result_mode, :enum) do
   	  :enum -> receive_result_enum(id_list, [])
   	  :merge -> receive_result_merge(id_list, [])
+      :merge_2 -> receive_result_merge_2(id_list, []) |> Enum.reverse()
   	end
   end 
 
@@ -334,5 +335,33 @@ defmodule Parallel do
   	else
   		[{fragment, id} | [{f_r, id_r} | rest ]]  		
   	end
+  end
+
+  def receive_result_merge_2([], result_list) do
+    result_list
+  end
+
+  def receive_result_merge_2(id_list, result_list) do
+    receive do
+      {id, fragment} ->
+        receive_result_merge_2(
+          List.delete(id_list, id),
+          merge_2(result_list, {fragment, id})
+        )
+    after
+      500 -> raise "Timeout when Process.receive_result/2"
+    end
+  end
+
+  def merge_2([], {fragment, id}) do
+    [{fragment, id}]
+  end
+
+  def merge_2([{f_r, id_r} | rest], {fragment, id}) do
+    if id_r < id do
+      [{f_r, id_r} | merge(rest, {fragment, id})]
+    else
+      [{fragment, id} | [{f_r, id_r} | rest ]]      
+    end
   end
 end
