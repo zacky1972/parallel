@@ -208,9 +208,58 @@ defmodule Parallel do
     end
   end
 
+  def pmap_chunk_every_to_spawn_func_sub(n..n, rest, func, spawn_func, id, _, _) do
+  	spawn_func.(self(), id, rest, func)
+  	[id]
+  end
+
   def pmap_chunk_every_to_spawn_func_sub([], rest, func, spawn_func, id, _, _) do
   	spawn_func.(self(), id, rest, func)
   	[id]
+  end
+
+  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from < to and from + threshold - 1 <= to do
+  	spawn_func.(self(), id, (from + threshold - 1)..from, func)
+  	[
+  	  id
+  	  | pmap_chunk_every_to_spawn_func_sub(
+  	  	(from + threshold)..to,
+  	  	[],
+  	  	func,
+  	  	spawn_func,
+  	  	id + 1,
+  	  	0,
+  	  	threshold
+  	  ) |> Enum.reverse()
+  	]
+  	|> Enum.reverse()
+  end
+
+  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from < to and from + threshold - 1 > to do
+  	spawn_func.(self(), id, to..from, func)
+  	[ id ]
+  end
+
+  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from > to and from - threshold + 1 >= to do
+  	spawn_func.(self(), id, (from - threshold + 1)..from, func)
+  	[
+  	  id
+  	  | pmap_chunk_every_to_spawn_func_sub(
+  	  	(from-threshold)..to,
+  	  	[],
+  	  	func,
+  	  	spawn_func,
+  	  	id + 1,
+  	  	0,
+  	  	threshold
+  	  ) |> Enum.reverse()
+  	]
+  	|> Enum.reverse()
+  end
+
+  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from > to and from - threshold + 1 < to do
+  	spawn_func.(self(), id, to..from, func)
+  	[ id ]
   end
 
   def pmap_chunk_every_to_spawn_func_sub(rest, heads, func, spawn_func, id, threshold, threshold) do
