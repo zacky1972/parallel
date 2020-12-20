@@ -20,9 +20,7 @@ defmodule Parallel.Pool do
 
   @impl true
   def handle_call(:get_process, _from, {[], wid}) do
-    wpid = spawn(Parallel.Worker_2, :worker, [wid])
-    :global.register_name(:"worker_#{wid}", wpid)
-    {:reply, wpid, {[], wid + 1}}
+    {:reply, Parallel.Worker_2.create_process(wid), {[], wid + 1}}
   end
 
   def handle_call(:get_process, _from, {[head | tail], wid}) do
