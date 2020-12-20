@@ -218,7 +218,7 @@ defmodule Parallel do
   	[id]
   end
 
-  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from < to and from + threshold - 1 <= to do
+  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from < to and from + threshold - 1 < to do
   	spawn_func.(self(), id, (from + threshold - 1)..from, func)
   	[
   	  id
@@ -235,12 +235,12 @@ defmodule Parallel do
   	|> Enum.reverse()
   end
 
-  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from < to and from + threshold - 1 > to do
+  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from < to and from + threshold - 1 >= to do
   	spawn_func.(self(), id, to..from, func)
   	[ id ]
   end
 
-  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from > to and from - threshold + 1 >= to do
+  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from > to and from - threshold + 1 > to do
   	spawn_func.(self(), id, (from - threshold + 1)..from, func)
   	[
   	  id
@@ -257,7 +257,7 @@ defmodule Parallel do
   	|> Enum.reverse()
   end
 
-  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from > to and from - threshold + 1 < to do
+  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from > to and from - threshold + 1 <= to do
   	spawn_func.(self(), id, to..from, func)
   	[ id ]
   end
