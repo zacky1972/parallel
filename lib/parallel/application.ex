@@ -14,7 +14,7 @@ defmodule Parallel.Application do
         {Parallel.BlockingQueue, name: :task_queue},
         Parallel.Pool
       ] ++
-        (1..:erlang.system_info(:logical_processors_available)
+        (1..(CpuInfo.all_profile() |> Map.get(:cpu) |> Map.get(:total_num_of_threads))
          |> Enum.map(fn id -> Supervisor.child_spec(Parallel.Worker, id: :"worker_#{id}") end))
 
     # See https://hexdocs.pm/elixir/Supervisor.html

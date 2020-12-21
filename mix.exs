@@ -24,7 +24,8 @@ defmodule Parallel.MixProject do
     [
       {:benchfella, "~> 0.3.5"},
       {:flow, "~> 1.0.0"},
-      {:pelemay, "~> 0.0.14"}
+      {:pelemay, "~> 0.0.14"},
+      {:cpu_info, "~> 0.2.1"}
     ]
   end
 end

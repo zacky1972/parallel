@@ -2,7 +2,7 @@ defmodule Parallel do
   @threshold 1_000
 
   def init do
-    1..:erlang.system_info(:logical_processors_available)
+    1..(CpuInfo.all_profile() |> Map.get(:cpu) |> Map.get(:total_num_of_threads))
     |> Enum.each(fn _ -> Parallel.Pool.get_process() end)
   end
 
