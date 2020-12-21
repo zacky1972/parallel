@@ -185,15 +185,15 @@ defmodule Parallel do
         )
 
       {true, :spawn, nil, opts} ->
-      	pmap_chunk_every_to_spawn_func(
-      		collection,
-      		count,
-      		func,
-      		fn pid, id, heads, func -> 
-      			Parallel.Pool.get_process() |> call(pid, id, heads, func)
-      		end,
-      		opts
-      	)
+        pmap_chunk_every_to_spawn_func(
+          collection,
+          count,
+          func,
+          fn pid, id, heads, func ->
+            Parallel.Pool.get_process() |> call(pid, id, heads, func)
+          end,
+          opts
+        )
 
       {true, _, spawn_func, _opts} ->
         pmap_chunk_every_to_spawn_func_sub(
@@ -209,57 +209,65 @@ defmodule Parallel do
   end
 
   def pmap_chunk_every_to_spawn_func_sub(n..n, rest, func, spawn_func, id, _, _) do
-  	spawn_func.(self(), id, rest, func)
-  	[id]
+    spawn_func.(self(), id, rest, func)
+    [id]
   end
 
   def pmap_chunk_every_to_spawn_func_sub([], rest, func, spawn_func, id, _, _) do
-  	spawn_func.(self(), id, rest, func)
-  	[id]
+    spawn_func.(self(), id, rest, func)
+    [id]
   end
 
-  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from < to and from + threshold - 1 < to do
-  	spawn_func.(self(), id, (from + threshold - 1)..from, func)
-  	[
-  	  id
-  	  | pmap_chunk_every_to_spawn_func_sub(
-  	  	(from + threshold)..to,
-  	  	[],
-  	  	func,
-  	  	spawn_func,
-  	  	id + 1,
-  	  	0,
-  	  	threshold
-  	  ) |> Enum.reverse()
-  	]
-  	|> Enum.reverse()
+  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold)
+      when from < to and from + threshold - 1 < to do
+    spawn_func.(self(), id, (from + threshold - 1)..from, func)
+
+    [
+      id
+      | pmap_chunk_every_to_spawn_func_sub(
+          (from + threshold)..to,
+          [],
+          func,
+          spawn_func,
+          id + 1,
+          0,
+          threshold
+        )
+        |> Enum.reverse()
+    ]
+    |> Enum.reverse()
   end
 
-  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from < to and from + threshold - 1 >= to do
-  	spawn_func.(self(), id, to..from, func)
-  	[ id ]
+  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold)
+      when from < to and from + threshold - 1 >= to do
+    spawn_func.(self(), id, to..from, func)
+    [id]
   end
 
-  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from > to and from - threshold + 1 > to do
-  	spawn_func.(self(), id, (from - threshold + 1)..from, func)
-  	[
-  	  id
-  	  | pmap_chunk_every_to_spawn_func_sub(
-  	  	(from-threshold)..to,
-  	  	[],
-  	  	func,
-  	  	spawn_func,
-  	  	id + 1,
-  	  	0,
-  	  	threshold
-  	  ) |> Enum.reverse()
-  	]
-  	|> Enum.reverse()
+  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold)
+      when from > to and from - threshold + 1 > to do
+    spawn_func.(self(), id, (from - threshold + 1)..from, func)
+
+    [
+      id
+      | pmap_chunk_every_to_spawn_func_sub(
+          (from - threshold)..to,
+          [],
+          func,
+          spawn_func,
+          id + 1,
+          0,
+          threshold
+        )
+        |> Enum.reverse()
+    ]
+    |> Enum.reverse()
   end
 
-  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold) when from > to and from - threshold + 1 <= to do
-  	spawn_func.(self(), id, to..from, func)
-  	[ id ]
+  def pmap_chunk_every_to_spawn_func_sub(from..to, [], func, spawn_func, id, 0, threshold)
+      when from > to and from - threshold + 1 <= to do
+    spawn_func.(self(), id, to..from, func)
+    [id]
   end
 
   def pmap_chunk_every_to_spawn_func_sub(rest, heads, func, spawn_func, id, threshold, threshold) do
@@ -268,30 +276,47 @@ defmodule Parallel do
     [
       id
       | pmap_chunk_every_to_spawn_func_sub(
-        rest, 
-        [], 
-        func, 
-        spawn_func,
-        id + 1, 
-        0, 
-        threshold
-      ) |> Enum.reverse()
+          rest,
+          [],
+          func,
+          spawn_func,
+          id + 1,
+          0,
+          threshold
+        )
+        |> Enum.reverse()
     ]
     |> Enum.reverse()
   end
 
-  def pmap_chunk_every_to_spawn_func_sub([head | tail], heads, func, spawn_func, id, count, threshold) do
-    pmap_chunk_every_to_spawn_func_sub(tail, [head | heads], func, spawn_func, id, count + 1, threshold)
+  def pmap_chunk_every_to_spawn_func_sub(
+        [head | tail],
+        heads,
+        func,
+        spawn_func,
+        id,
+        count,
+        threshold
+      ) do
+    pmap_chunk_every_to_spawn_func_sub(
+      tail,
+      [head | heads],
+      func,
+      spawn_func,
+      id,
+      count + 1,
+      threshold
+    )
   end
 
   def receive_result_with_opt(id_list, opts) do
-  	case Keyword.get(opts, :result_mode, :enum) do
-  	  :enum -> receive_result_enum(id_list, [])
-  	  :merge -> receive_result_merge(id_list, [])
+    case Keyword.get(opts, :result_mode, :enum) do
+      :enum -> receive_result_enum(id_list, [])
+      :merge -> receive_result_merge(id_list, [])
       :merge_2 -> receive_result_merge_2(id_list, []) |> Enum.reverse()
       :bin -> receive_result_bin(id_list, nil) |> binary_to_list()
-  	end
-  end 
+    end
+  end
 
   def receive_result_enum([], result_list) do
     result_list
@@ -327,15 +352,15 @@ defmodule Parallel do
   end
 
   def merge([], {fragment, id}) do
-  	[{fragment, id}]
+    [{fragment, id}]
   end
 
   def merge([{f_r, id_r} | rest], {fragment, id}) do
-  	if id_r >= id do
-  		[{f_r, id_r} | merge(rest, {fragment, id})]
-  	else
-  		[{fragment, id} | [{f_r, id_r} | rest ]]  		
-  	end
+    if id_r >= id do
+      [{f_r, id_r} | merge(rest, {fragment, id})]
+    else
+      [{fragment, id} | [{f_r, id_r} | rest]]
+    end
   end
 
   def receive_result_merge_2([], result_list) do
@@ -362,7 +387,7 @@ defmodule Parallel do
     if id_r < id do
       [{f_r, id_r} | merge(rest, {fragment, id})]
     else
-      [{fragment, id} | [{f_r, id_r} | rest ]]      
+      [{fragment, id} | [{f_r, id_r} | rest]]
     end
   end
 
@@ -394,7 +419,7 @@ defmodule Parallel do
   end
 
   def binary_to_list(nil), do: []
-  
+
   def binary_to_list({_id, fragment, left, right}) do
     binary_to_list(left) ++ fragment ++ binary_to_list(right)
   end
